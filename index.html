@@ -501,6 +501,19 @@
             border-radius: 10px;
             background-color: rgba(255, 255, 255, 0.05);
         }
+
+        .map-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .responsive-map {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -561,7 +574,6 @@
     </div>    
 
     <div class="container" id="formContainer" style="display:none;">
-        <div class="countdown">05:00</div>
         
         <div class="logo">
             <img src="img/logo.gif" alt="Coconut Game Logo">
@@ -591,6 +603,10 @@
                 <label for="tanggalLahir">Tanggal Lahir</label>
                 <input type="date" id="tanggalLahir" name="tanggalLahir" required>
             </div>
+
+            <div class="map-container">
+                <img src="img/map.jpeg" alt="Map Wilayah" class="responsive-map" />
+            </div>            
         
             <div class="form-group">
                 <label for="domisili">Domisili Wilayah</label>
@@ -615,6 +631,55 @@
         
             <button id="submitFinalButton" disabled style="margin-top: 30px; padding: 12px 24px; font-size: 1.2rem;">Next</button>
         </form>        
+
+        <!-- PAYMENT PAGE -->
+        <div id="paymentPage" class="container" style="display:none;">
+            <form id="paymentForm" enctype="multipart/form-data">
+                <h1>Payment Options</h1>
+
+                <div class="form-group">
+                    <label for="paymentOption">Pilih Paket:</label>
+                    <div class="radio-group" id="paymentOptions" style="flex-direction: column; gap: 15px;">
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="1" required>
+                            <span><span style="color:#92b847;">Coconut Game</span> saja – Rp. 15.000</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="2">
+                            <span><span style="color:#92b847;">Coconut Game</span> + <span style="color:#dfc538;">Kaos</span> – Rp. 55.000</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="3">
+                            <span><span style="color:#92b847;">Coconut Game</span> + <span style="color:#41c1cf;">Kalung</span> – Rp. 50.000</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="payment" value="4">
+                            <span><span style="color:#92b847;">Coconut Game</span> + <span style="color:#dfc538;">Kaos</span> + <span style="color:#41c1cf;">Kalung</span> – Rp. 90.000</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="sizeGroup" style="display:none;">
+                    <label for="size">Ukuran Kaos:</label>
+                    <select id="size" name="size">
+                        <option value="" disabled selected>Pilih ukuran</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                        <option value="XXXL">XXXL</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="buktiBayar">Upload Bukti Pembayaran:</label><br>
+                    <input type="file" id="buktiBayar" name="buktiBayar" accept=".jpg,.jpeg,.png" required />
+                </div>
+                
+
+                <button type="submit" id="submitButton" style="margin-top: 30px;">Submit Application</button>
+            </form>
+        </div>
         
         <!-- <form id="registrationForm">
             <div class="form-group">
@@ -722,6 +787,258 @@
     </div>     -->
 
     <script>
+        const paymentForm = document.getElementById('paymentForm');
+        const buktiBayar = document.getElementById('buktiBayar');
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec';
+        const validationURL = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec'; // Karena kamu pakai satu script untuk submit & validasi
+        const scriptRSVP = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec';
+        
+        const form = document.getElementById('registrationForm');
+        const checkbox = document.getElementById('agreementCheckbox');
+        const checkboxWrapper = document.getElementById('checkboxWrapper');
+        const nextButton = document.getElementById('nextButton');
+        const finalCheckbox = document.getElementById('finalAgreement');
+        const finalCheckboxWrapper = document.getElementById('finalCheckboxWrapper');
+        const submitFinalButton = document.getElementById('submitFinalButton');
+        const loadingScreen = document.getElementById('loadingScreen');
+        
+        // --- PREFILL & VALIDASI NAMA DARI URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const incomingName = urlParams.get("name");
+        const welcome = document.querySelector("#openingPage h1");
+        const nameInput = document.getElementById('nama');
+        const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+        
+        if (!incomingName) {
+          alert("Link tidak valid. Nama tidak tersedia.");
+          document.body.innerHTML = "<h2 style='text-align:center;color:red;'>Unauthorized Access</h2>";
+        } else {
+          // Tampilkan nama langsung (prefill cepat)
+          if (welcome) welcome.innerHTML = `<b>WELCOME, ${incomingName.toUpperCase()}</b>`;
+          if (nameInput) {
+            nameInput.value = incomingName;
+            nameInput.readOnly = true;
+          }
+        
+          // Validasi nama jika bukan lokal
+          if (!isLocal) {
+            const apiUrl = validationURL + "?name=" + encodeURIComponent(incomingName);
+            fetch(apiUrl)
+              .then(res => res.json())
+              .then(data => {
+                if (!data.success) {
+                  alert("Nama tidak ditemukan di database.");
+                  document.body.innerHTML = "<h2 style='text-align:center;color:red;'>Unauthorized Access</h2>";
+                }
+              })
+              .catch(err => {
+                console.error(err);
+                alert("Gagal menghubungkan ke server.");
+              });
+          }
+        }
+        
+        // --- VALIDASI CHECKLIST PERTAMA (Disclaimer) ---
+        checkbox.addEventListener('change', function () {
+          nextButton.disabled = !this.checked;
+          checkboxWrapper.classList.remove('error');
+        });
+        
+        nextButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+          if (!checkbox.checked) {
+            checkboxWrapper.classList.remove('error');
+            void checkboxWrapper.offsetWidth;
+            checkboxWrapper.classList.add('error');
+            setTimeout(() => checkboxWrapper.classList.remove('error'), 500);
+          } else {
+            document.getElementById('confirmationPage').style.display = 'none';
+            document.getElementById('formContainer').style.display = 'block';
+          }
+        });
+        
+        // --- VALIDASI CHECKLIST FORM PLAYER INFO ---
+        finalCheckbox.addEventListener('change', function () {
+          submitFinalButton.disabled = !this.checked;
+          finalCheckboxWrapper.classList.remove('error');
+        });
+        
+        submitFinalButton.addEventListener('click', function (e) {
+            e.preventDefault(); // <- tambahkan ini agar tidak trigger form submit
+
+            if (!finalCheckbox.checked) {
+                finalCheckboxWrapper.classList.remove('error');
+                void finalCheckboxWrapper.offsetWidth;
+                finalCheckboxWrapper.classList.add('error');
+                setTimeout(() => {
+                    finalCheckboxWrapper.classList.remove('error');
+                }, 500);
+            } else {
+                document.getElementById('registrationForm').style.display = 'none';
+                document.getElementById('paymentPage').style.display = 'block';
+            }
+        });
+        
+        // --- EVENT UNTUK BUTTON RSVP ---
+        document.getElementById('showIntro').addEventListener('click', function () {
+          document.getElementById('openingPage').style.display = 'none';
+          document.getElementById('confirmationPage').style.display = 'block';
+        });
+        
+        // --- LOGIKA TAMPILKAN SIZE KAOS JIKA OPSI 2/4 DIPILIH ---
+        const paymentRadios = document.querySelectorAll('input[name="payment"]');
+        const sizeGroup = document.getElementById('sizeGroup');
+        const sizeSelect = document.getElementById('size');
+        
+        paymentRadios.forEach(radio => {
+          radio.addEventListener('change', function () {
+            if (this.value === '2' || this.value === '4') {
+              sizeGroup.style.display = 'block';
+              sizeSelect.setAttribute('required', 'true');
+            } else {
+              sizeGroup.style.display = 'none';
+              sizeSelect.removeAttribute('required');
+            }
+          });
+        });
+        
+        // --- SUBMIT FORM KE GOOGLE SHEET ---
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+        
+          const selectedPayment = document.querySelector('input[name="payment"]:checked');
+          if (!selectedPayment) {
+            alert('Silakan pilih salah satu opsi pembayaran.');
+            return;
+          }
+        
+          if ((selectedPayment.value === '2' || selectedPayment.value === '4') && !sizeSelect.value) {
+            alert('Silakan pilih ukuran kaos.');
+            return;
+          }
+        
+          loadingScreen.style.display = 'flex';
+        
+            const formData = new FormData();
+            formData.append("buktiBayar", file); // hanya file
+            
+            const query = new URLSearchParams({
+            nama: namaInput.value,
+            tanggalLahir: tanggalLahirInput.value,
+            domisili: domisiliInput.value,
+            alergi: alergiInput.value,
+            payment: paymentOption.value,
+            size: sizeSelect.value
+            });
+
+            fetch(`${scriptURL}?${query.toString()}`, {
+            method: "POST",
+            body: formData
+            })
+            .then(response => {
+              if (!response.ok) throw new Error("Gagal");
+              document.getElementById('paymentPage').style.display = 'none';
+              document.getElementById('confirmationContainer').style.display = 'block';
+              loadingScreen.style.display = 'none';
+            })
+            .catch(error => {
+              alert('Gagal mengirim data: ' + error.message);
+              loadingScreen.style.display = 'none';
+            });
+        });
+
+        //Section Bukti Bayar
+        paymentForm?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            document.getElementById('formContainer').style.display = 'none';
+
+            const payment = document.querySelector('input[name="payment"]:checked');
+            const size = document.getElementById('size');
+            const buktiBayar = document.getElementById('buktiBayar');
+            const loading = document.getElementById('loadingScreen');
+
+            if (!payment) {
+                alert('Silakan pilih paket pembayaran.');
+                return;
+            }
+
+            if ((payment.value === '2' || payment.value === '4') && !size.value) {
+                alert('Silakan pilih ukuran kaos.');
+                return;
+            }
+
+            if (!buktiBayar.files.length) {
+                alert('Silakan upload bukti pembayaran.');
+                return;
+            }
+
+            const file = buktiBayar.files[0];
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+
+            if (!allowedTypes.includes(file.type)) {
+                alert('Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diperbolehkan.');
+                return;
+            }
+
+            if (file.size > 3 * 1024 * 1024) {
+                alert('Ukuran file terlalu besar. Maksimal 3 MB.');
+                return;
+            }
+
+            // Create FormData object properly for multipart/form-data
+            const formData = new FormData();
+            formData.append("nama", document.getElementById('nama')?.value || '');
+            formData.append("tanggalLahir", document.getElementById('tanggalLahir')?.value || '');
+            formData.append("domisili", document.getElementById('domisili')?.value || '');
+            formData.append("alergi", document.getElementById('alergi')?.value || '');
+            formData.append("payment", payment.value);
+            formData.append("size", size.value || '');
+            formData.append("buktiBayar", file, file.name); // Include filename
+
+            if (loading) loading.style.display = 'flex';
+
+            fetch(scriptRSVP, {
+                method: 'POST',
+                body: formData,
+                // Don't set Content-Type header - browser will set it with boundary
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Gagal");
+                if (loading) loading.style.display = 'none';
+                document.getElementById('paymentPage').style.display = 'none';
+                
+                // Check if confirmationContainer exists, if not create a simple one
+                let confirmationContainer = document.getElementById('confirmationContainer');
+                if (!confirmationContainer) {
+                    confirmationContainer = document.createElement('div');
+                    confirmationContainer.id = 'confirmationContainer';
+                    confirmationContainer.className = 'container confirmation';
+                    confirmationContainer.innerHTML = `
+                        <h1>THANK YOU!</h1>
+                        <p>Your application has been received.</p>
+                        <div class="logo">
+                            <img src="img/logo.gif" alt="Coconut Game Logo" />
+                        </div>
+                        <p>Stay sharp.<br>
+                        Follow <a href="https://www.instagram.com/omkstyakobus/" target="_blank">@omkstyakobus</a> and 
+                        <a href="https://www.instagram.com/omk.kimtaegon/" target="_blank">@omk.kimtaegon</a> for updates.</p>
+                    `;
+                    document.body.appendChild(confirmationContainer);
+                }
+                
+                confirmationContainer.style.display = 'block';
+            })
+            .catch(err => {
+                if (loading) loading.style.display = 'none';
+                console.error(err);
+                alert('Gagal mengirim data: ' + err.message);
+            });
+        });
+    </script>
+        
+<!-- 
+    <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec';
         const validationURL = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec'; // Ganti dengan URL validasi nama
         
@@ -779,6 +1096,10 @@
             const formData = new FormData(form);
         
             document.getElementById('loadingScreen').style.display = 'flex';
+
+            formData.append("payment", document.querySelector('input[name="payment"]:checked')?.value || '');
+            formData.append("size", document.getElementById("size")?.value || '');
+
         
             fetch(scriptURL, {
                 method: 'POST',
@@ -839,19 +1160,40 @@
             }
         });
         
+        // Show paymentPage if final agreement is checked
         submitFinalButton.addEventListener('click', function (e) {
             if (!finalCheckbox.checked) {
                 e.preventDefault();
                 finalCheckboxWrapper.classList.remove('error');
                 void finalCheckboxWrapper.offsetWidth;
                 finalCheckboxWrapper.classList.add('error');
-        
+
                 setTimeout(() => {
                     finalCheckboxWrapper.classList.remove('error');
                 }, 500);
+            } else {
+                document.getElementById('formContainer').style.display = 'none';
+                document.getElementById('paymentPage').style.display = 'block';
             }
         });
-    </script>
+
+        // Toggle size selector based on payment choice
+        const paymentRadios = document.querySelectorAll('input[name="payment"]');
+        const sizeGroup = document.getElementById('sizeGroup');
+
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (this.value === '2' || this.value === '4') {
+                    sizeGroup.style.display = 'block';
+                    document.getElementById('size').setAttribute('required', 'true');
+                } else {
+                    sizeGroup.style.display = 'none';
+                    document.getElementById('size').removeAttribute('required');
+                }
+            });
+        });
+
+    </script> -->
         
 
     <!-- <script>
