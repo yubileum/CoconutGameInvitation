@@ -543,25 +543,31 @@
         }
 
         #finalThankYouPage {
-            width: 100%;
+            width: 100vw;
             height: 100vh;
-            padding: 2rem;
+            aspect-ratio: 9 / 16;
+            padding: 3rem 2rem;
             box-sizing: border-box;
-            overflow: auto;
-            border-radius: 0;
+            overflow: hidden;
             background: url('img/background.png') no-repeat center center;
             background-size: cover;
             color: white;
-            position: fixed;
             top: 0;
             left: 0;
             z-index: 9999;
             text-align: center;
-            display: flex;
+            display: none;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
         }
+
+        /* @media screen and (max-width: 1080px) {
+            #finalThankYouPage {
+                transform: scale(0.9);
+                transform-origin: top;
+            }
+        } */
 
         #finalThankYouPage h1 {
             font-size: 2.4rem;
@@ -661,13 +667,13 @@
 
     <div class="container" id="formContainer" style="display:none;">
         
-        <div class="logo">
+        <div class="logo" id="logoCoconut">
             <img src="img/logo.gif" alt="Coconut Game Logo">
         </div>
         
-        <h1>Player Information</h1>
+        <h1 id = "h1Coconut">Player Information</h1>
         
-        <div class="squid-symbols">
+        <div class="squid-symbols" id="symbolsCoconut">
             <div class="symbol">
                 <img src="img/segitiga.png" alt="">
             </div>
@@ -774,27 +780,29 @@
         </div>
 
         <!-- Thank You Page -->
-        <div id="finalThankYouPage" style="display: none;">
-            <div class="top-logos">
-                <img src="img/OMK-logo.png" alt="OMK Logo" />
-                <img src="img/ICU-logo.png" alt="ICU Logo" />
-            </div>
-            <h1>Thank you,<br><span id="thankYouName">Player</span>.</h1>
-            <p>THE COCONUT GAME will test more than just your strength—it will challenge your mind, instincts, and will to win.</p>
-            <p>Are you ready? See you on May 24th.</p>
-            <img class="logo-main" src="img/logo.png" alt="Coconut Game Logo">
-            <h2>COME PLAY WITH ME</h2>
-            <div style="line-height: 2;">
-                ............................................<br>
-                ............................................<br>
-                ............................................
-            </div>
-            <p class="share-instruction">
-                Screenshot this page and share it on your story with<br>
-                <b>#IvoryCoconutUnity #CoconutGame</b><br>
-                @omkstyakobus @omk.kimtaegon
-            </p>
-        </div>            
+        <div id="thankYouWrapper" style="width: 100%; display: flex; justify-content: center; align-items: center;">
+            <div id="finalThankYouPage" style="display: none;">
+                <div class="top-logos">
+                    <img src="img/OMK-logo.png" alt="OMK Logo" />
+                    <img src="img/ICU-logo.png" alt="ICU Logo" />
+                </div>
+                <h1>Thank you,<br><span id="thankYouName">Player</span>.</h1>
+                <p>THE COCONUT GAME will test more than just your strength—it will challenge your mind, instincts, and will to win.</p>
+                <p>Are you ready? See you on May 24th.</p>
+                <img class="logo-main" src="img/logo.png" alt="Coconut Game Logo">
+                <h2>COME PLAY WITH ME</h2>
+                <div style="line-height: 2;">
+                    ............................................<br>
+                    ............................................<br>
+                    ............................................
+                </div>
+                <p class="share-instruction">
+                    Screenshot this page and share it on your story with<br>
+                    <b>#IvoryCoconutUnity #CoconutGame</b><br>
+                    @omkstyakobus @omk.kimtaegon
+                </p>
+            </div>            
+        </div>
         
         <!-- <form id="registrationForm">
             <div class="form-group">
@@ -1046,6 +1054,11 @@
 
             // Menyembunyikan halaman sebelumnya
             document.getElementById('paymentPage').style.display = 'none';
+            document.getElementById('logoCoconut').style.display = 'none';
+            document.getElementById('h1Coconut').style.display = 'none';
+            document.getElementById('symbolsCoconut').style.display = 'none';
+
+            //document.getElementsByClassName('logo').style.display = 'none';
 
             // Menampilkan halaman Thank You
             document.getElementById('finalThankYouPage').style.display = 'flex';
