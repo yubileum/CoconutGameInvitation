@@ -1068,6 +1068,41 @@
             const playerName = document.getElementById('nama').value;
             document.getElementById('thankYouName').textContent = playerName;
         });
+        
+        //validasi submit
+        document.addEventListener('DOMContentLoaded', () => {
+    const submitButton = document.getElementById('submitButton');
+    const paymentOptions = document.querySelectorAll('input[name="payment"]');
+    const sizeGroup = document.getElementById('sizeGroup');
+    const sizeSelect = document.getElementById('size');
+    const buktiBayarInput = document.getElementById('buktiBayar');
+
+    const validateForm = () => {
+        const selectedPaymentOption = document.querySelector('input[name="payment"]:checked');
+        const isSizeRequired = selectedPaymentOption && (selectedPaymentOption.value === '2' || selectedPaymentOption.value === '4');
+        const isSizeFilled = isSizeRequired ? (sizeSelect.value && sizeSelect.value !== "") : true;
+        const isBuktiBayarUploaded = buktiBayarInput.files.length > 0;
+
+        // Enable submit button only if all conditions are met
+        submitButton.disabled = !(selectedPaymentOption && isSizeFilled && isBuktiBayarUploaded);
+    };
+
+    // Add event listeners to payment options
+    paymentOptions.forEach(option => {
+        option.addEventListener('change', () => {
+            const showSize = option.value === '2' || option.value === '4';
+            sizeGroup.style.display = showSize ? 'block' : 'none';
+            validateForm();
+        });
+    });
+
+    // Add event listeners to size select and bukti bayar input
+    sizeSelect.addEventListener('change', validateForm);
+    buktiBayarInput.addEventListener('change', validateForm);
+
+    // Initial validation
+    validateForm();
+});
     </script>
       
       
