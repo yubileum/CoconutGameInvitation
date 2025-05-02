@@ -601,8 +601,8 @@
         
             <div class="form-group">
                 <label for="tanggalLahir">Tanggal Lahir</label>
-                <input type="date" id="tanggalLahir" name="tanggalLahir" required>
-            </div>
+                <input type="text" id="tanggalLahir" name="tanggalLahir" required placeholder="dd/mm/yyyy" maxlength="10">
+            </div>                      
 
             <div class="map-container">
                 <img src="img/map.jpeg" alt="Map Wilayah" class="responsive-map" />
@@ -614,7 +614,7 @@
             </div>
         
             <div class="form-group">
-                <label for="alergi">Alergi / Penyakit Bawaan</label>
+                <label for="alergi">Alergi / Penyakit Bawaan (Tulis "-" apabila tidak ada)</label>
                 <input type="text" id="alergi" name="alergi" required>
             </div>
         
@@ -787,6 +787,201 @@
     </div>     -->
 
     <script>
+        // ================ VARIABEL GLOBAL ================
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec';
+        const loadingScreen = document.getElementById('loadingScreen');
+        
+        // ================ FUNGSI EXISTING (TIDAK DIUBAH) ================
+        // 1. Format Tanggal Lahir
+        document.getElementById('tanggalLahir').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2 && value.length <= 4) {
+                value = value.slice(0, 2) + '/' + value.slice(2);
+            } else if (value.length > 4) {
+                value = value.slice(0, 2) + '/' + value.slice(2, 4) + '/' + value.slice(4, 8);
+            }
+            e.target.value = value;
+        });
+    
+        // 2. Validasi Nama dari URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const incomingName = urlParams.get("name");
+        if (!incomingName) {
+            alert("Link tidak valid. Nama tidak tersedia.");
+            document.body.innerHTML = "<h2 style='text-align:center;color:red;'>Unauthorized Access</h2>";
+        } else {
+            document.querySelector("#openingPage h1").innerHTML = `<b>WELCOME, ${incomingName.toUpperCase()}</b>`;
+            document.getElementById('nama').value = incomingName;
+        }
+    
+        // 3. Navigasi Antar Halaman (Fungsi Existing)
+        document.getElementById('showIntro').addEventListener('click', function() {
+            document.getElementById('openingPage').style.display = 'none';
+            document.getElementById('confirmationPage').style.display = 'block';
+        });
+    
+        // 4. Validasi Checklist Disclaimer
+        document.getElementById('agreementCheckbox').addEventListener('change', function() {
+            document.getElementById('nextButton').disabled = !this.checked;
+        });
+    
+        document.getElementById('nextButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!document.getElementById('agreementCheckbox').checked) {
+                alert("Anda harus menyetujui persyaratan terlebih dahulu.");
+                return;
+            }
+            document.getElementById('confirmationPage').style.display = 'none';
+            document.getElementById('formContainer').style.display = 'block';
+        });
+    
+        // 5. Validasi Checklist Form
+        document.getElementById('finalAgreement').addEventListener('change', function() {
+            document.getElementById('submitFinalButton').disabled = !this.checked;
+        });
+    
+        document.getElementById('submitFinalButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!document.getElementById('finalAgreement').checked) {
+                alert("Anda harus mencentang persetujuan terlebih dahulu.");
+                return;
+            }
+            document.getElementById('registrationForm').style.display = 'none';
+            document.getElementById('paymentPage').style.display = 'block';
+        });
+    
+        // ================ FITUR BARU: UPLOAD FILE ================
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Hindari reload halaman
+            
+            // Ambil data dari form
+            const payment = document.querySelector('input[name="payment"]:checked');
+            const size = document.getElementById('size');
+            const buktiBayarInput = document.getElementById('buktiBayar');
+            const buktiBayar = buktiBayarInput.files[0];
+
+            // Validasi form
+            if (!payment) {
+                alert('Pilih paket pembayaran!');
+                return;
+            }
+            if ((payment.value === '2' || payment.value === '4') && !size.value) {
+                alert('Pilih ukuran kaos!');
+                return;
+            }
+            if (!buktiBayar) {
+                alert('Upload bukti pembayaran!');
+                return;
+            }
+            if (!['image/jpeg', 'image/png', 'image/jpg'].includes(buktiBayar.type)) {
+                alert('Hanya format JPEG, JPG, atau PNG yang diterima!');
+                return;
+            }
+            if (buktiBayar.size > 3 * 1024 * 1024) { // 3MB max
+                alert('Ukuran file terlalu besar (maksimal 3MB)!');
+                return;
+            }
+
+            // Tampilkan loading screen
+            loadingScreen.style.display = 'flex';
+
+            try {
+                // Baca file sebagai Base64
+                const base64Data = await readFileAsBase64(buktiBayar);
+
+                // Data yang akan dikirim ke Google Apps Script
+                const formData = {
+                nama: document.getElementById('nama').value,
+                tanggalLahir: document.getElementById('tanggalLahir').value,
+                domisili: document.getElementById('domisili').value,
+                alergi: document.getElementById('alergi').value,
+                payment: payment.value,
+                size: size.value || '', // Kosongkan jika tidak ada
+                buktiBayar: base64Data,
+                mimeType: buktiBayar.type,
+                filename: buktiBayar.name,
+                };
+
+                // Kirim data menggunakan fungsi submitPaymentForm()
+                const result = await submitPaymentForm(formData);
+
+                // Jika sukses, tampilkan halaman konfirmasi
+                if (result.status === "success") {
+                document.getElementById('paymentPage').style.display = 'none';
+                document.getElementById('confirmationContainer').style.display = 'block';
+                } else {
+                throw new Error(result.message || "Gagal mengirim data");
+                }
+            } catch (error) {
+                alert("Terjadi error: " + error.message);
+            } finally {
+                loadingScreen.style.display = 'none'; // Sembunyikan loading
+            }
+            });
+
+            /**
+             * Helper function: Baca file sebagai Base64
+             */
+            function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            }
+    
+        // ================ FUNGSI TAMBAHAN ================
+        // Toggle Ukuran Kaos
+        document.querySelectorAll('input[name="payment"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const sizeGroup = document.getElementById('sizeGroup');
+                sizeGroup.style.display = (this.value === '2' || this.value === '4') ? 'block' : 'none';
+            });
+        });
+
+        /**
+         * Fungsi untuk mengirim data ke Google Apps Script
+         * dengan penanganan CORS yang benar.
+         */
+        async function submitPaymentForm(formData) {
+        try {
+            // 1. Kirim OPTIONS request (Preflight CORS)
+            const optionsResponse = await fetch(scriptURL, {
+            method: 'OPTIONS',
+            headers: {
+                'Origin': window.location.origin,
+                'Access-Control-Request-Method': 'POST',
+                'Access-Control-Request-Headers': 'Content-Type',
+            },
+            });
+
+            if (!optionsResponse.ok) {
+            throw new Error("Preflight CORS gagal");
+            }
+
+            // 2. Kirim POST request dengan data
+            const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error saat mengirim data:", error);
+            throw error; // Lempar error untuk ditangkap di caller
+        }
+        }
+    </script>
+
+    <!-- <script>
         const paymentForm = document.getElementById('paymentForm');
         const buktiBayar = document.getElementById('buktiBayar');
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwW7oPYpO-sNMFChomHT2MiuQHADozBl5uj5JOee6KI2tsMeBbUPkDb14EXSLIp-Tikvg/exec';
@@ -801,6 +996,17 @@
         const finalCheckboxWrapper = document.getElementById('finalCheckboxWrapper');
         const submitFinalButton = document.getElementById('submitFinalButton');
         const loadingScreen = document.getElementById('loadingScreen');
+
+        //tanggal lahir
+        document.getElementById('tanggalLahir').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // hanya angka
+            if (value.length > 2 && value.length <= 4)
+                value = value.slice(0, 2) + '/' + value.slice(2);
+            else if (value.length > 4)
+                value = value.slice(0, 2) + '/' + value.slice(2, 4) + '/' + value.slice(4, 8);
+            e.target.value = value;
+        });
+
         
         // --- PREFILL & VALIDASI NAMA DARI URL ---
         const urlParams = new URLSearchParams(window.location.search);
@@ -951,91 +1157,63 @@
         //Section Bukti Bayar
         paymentForm?.addEventListener('submit', function (e) {
             e.preventDefault();
-            document.getElementById('formContainer').style.display = 'none';
 
             const payment = document.querySelector('input[name="payment"]:checked');
             const size = document.getElementById('size');
             const buktiBayar = document.getElementById('buktiBayar');
             const loading = document.getElementById('loadingScreen');
 
-            if (!payment) {
-                alert('Silakan pilih paket pembayaran.');
-                return;
-            }
-
-            if ((payment.value === '2' || payment.value === '4') && !size.value) {
-                alert('Silakan pilih ukuran kaos.');
-                return;
-            }
-
-            if (!buktiBayar.files.length) {
-                alert('Silakan upload bukti pembayaran.');
-                return;
-            }
+            if (!payment) return alert('Silakan pilih paket pembayaran.');
+            if ((payment.value === '2' || payment.value === '4') && !size.value) return alert('Silakan pilih ukuran kaos.');
+            if (!buktiBayar.files.length) return alert('Silakan upload bukti pembayaran.');
 
             const file = buktiBayar.files[0];
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) return alert('Format file tidak didukung. Hanya JPG, JPEG, PNG.');
+            if (file.size > 3 * 1024 * 1024) return alert('Ukuran file terlalu besar. Maksimal 3 MB.');
 
-            if (!allowedTypes.includes(file.type)) {
-                alert('Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diperbolehkan.');
-                return;
-            }
+            const reader = new FileReader();
+            reader.onload = function () {
+                const base64 = reader.result.split(',')[1];
 
-            if (file.size > 3 * 1024 * 1024) {
-                alert('Ukuran file terlalu besar. Maksimal 3 MB.');
-                return;
-            }
+                const payload = {
+                    nama: document.getElementById('nama').value,
+                    tanggalLahir: document.getElementById('tanggalLahir').value,
+                    domisili: document.getElementById('domisili').value,
+                    alergi: document.getElementById('alergi').value,
+                    payment: payment.value,
+                    size: size.value || '',
+                    buktiBayar: base64,
+                    mimeType: file.type,
+                    filename: file.name
+                };
 
-            // Create FormData object properly for multipart/form-data
-            const formData = new FormData();
-            formData.append("nama", document.getElementById('nama')?.value || '');
-            formData.append("tanggalLahir", document.getElementById('tanggalLahir')?.value || '');
-            formData.append("domisili", document.getElementById('domisili')?.value || '');
-            formData.append("alergi", document.getElementById('alergi')?.value || '');
-            formData.append("payment", payment.value);
-            formData.append("size", size.value || '');
-            formData.append("buktiBayar", file, file.name); // Include filename
+                if (loading) loading.style.display = 'flex';
 
-            if (loading) loading.style.display = 'flex';
+                fetch(scriptRSVP, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (loading) loading.style.display = 'none';
+                    if (result.status !== "success") throw new Error(result.message || "Unknown error");
 
-            fetch(scriptRSVP, {
-                method: 'POST',
-                body: formData,
-                // Don't set Content-Type header - browser will set it with boundary
-            })
-            .then(res => {
-                if (!res.ok) throw new Error("Gagal");
-                if (loading) loading.style.display = 'none';
-                document.getElementById('paymentPage').style.display = 'none';
-                
-                // Check if confirmationContainer exists, if not create a simple one
-                let confirmationContainer = document.getElementById('confirmationContainer');
-                if (!confirmationContainer) {
-                    confirmationContainer = document.createElement('div');
-                    confirmationContainer.id = 'confirmationContainer';
-                    confirmationContainer.className = 'container confirmation';
-                    confirmationContainer.innerHTML = `
-                        <h1>THANK YOU!</h1>
-                        <p>Your application has been received.</p>
-                        <div class="logo">
-                            <img src="img/logo.gif" alt="Coconut Game Logo" />
-                        </div>
-                        <p>Stay sharp.<br>
-                        Follow <a href="https://www.instagram.com/omkstyakobus/" target="_blank">@omkstyakobus</a> and 
-                        <a href="https://www.instagram.com/omk.kimtaegon/" target="_blank">@omk.kimtaegon</a> for updates.</p>
-                    `;
-                    document.body.appendChild(confirmationContainer);
-                }
-                
-                confirmationContainer.style.display = 'block';
-            })
-            .catch(err => {
-                if (loading) loading.style.display = 'none';
-                console.error(err);
-                alert('Gagal mengirim data: ' + err.message);
-            });
+                    document.getElementById('paymentPage').style.display = 'none';
+                    document.getElementById('confirmationContainer').style.display = 'block';
+                })
+                .catch(err => {
+                    if (loading) loading.style.display = 'none';
+                    alert("Gagal mengirim data: " + err.message);
+                });
+            };
+
+            reader.readAsDataURL(file);
         });
-    </script>
+    </script> -->
         
 <!-- 
     <script>
