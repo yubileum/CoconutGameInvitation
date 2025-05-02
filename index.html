@@ -721,7 +721,7 @@
                 </div>
             </div>
         
-            <button id="submitFinalButton" disabled style="margin-top: 30px; padding: 12px 24px; font-size: 1.2rem;">Next</button>
+            <button id="submitFinalButton" disabled style="margin-top: 30px; display: none; padding: 12px 24px; font-size: 1.2rem;">Next</button>
         </form>        
 
         <!-- PAYMENT PAGE -->
@@ -1109,6 +1109,41 @@
 
     // Validasi awal saat halaman dimuat
     validateForm();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const nextButton = document.getElementById('submitFinalButton');
+    const nameInput = document.getElementById('nama');
+    const birthDateInput = document.getElementById('tanggalLahir');
+    const domisiliInput = document.getElementById('domisili');
+    const alergiInput = document.getElementById('alergi');
+    const finalAgreement = document.getElementById('finalAgreement');
+
+    // Fungsi untuk validasi form Player Information
+    const validatePlayerForm = () => {
+        const isNameFilled = nameInput.value.trim() !== '';
+        const isBirthDateFilled = birthDateInput.value.trim() !== '';
+        const isDomisiliFilled = domisiliInput.value.trim() !== '';
+        const isAlergiFilled = alergiInput.value.trim() !== '';
+        const isAgreementChecked = finalAgreement.checked;
+
+        // Tampilkan atau sembunyikan tombol Next berdasarkan validasi
+        if (isNameFilled && isBirthDateFilled && isDomisiliFilled && isAlergiFilled && isAgreementChecked) {
+            nextButton.style.display = 'block'; // Tampilkan tombol
+        } else {
+            nextButton.style.display = 'none'; // Sembunyikan tombol
+        }
+    };
+
+    // Tambahkan event listeners ke input dan checkbox
+    nameInput.addEventListener('input', validatePlayerForm);
+    birthDateInput.addEventListener('input', validatePlayerForm);
+    domisiliInput.addEventListener('input', validatePlayerForm);
+    alergiInput.addEventListener('input', validatePlayerForm);
+    finalAgreement.addEventListener('change', validatePlayerForm);
+
+    // Validasi awal saat halaman dimuat
+    validatePlayerForm();
 });
     </script>
       
