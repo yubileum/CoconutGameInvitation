@@ -776,7 +776,7 @@
                 </div>
                 
 
-                <button type="submit" id="submitButton" style="margin-top: 30px;">Submit Application</button>
+                <button type="submit" id="submitButton" style="margin-top: 30px; display: none;">Submit Application</button>
             </form>
         </div>
 
@@ -1077,17 +1077,22 @@
     const sizeSelect = document.getElementById('size');
     const buktiBayarInput = document.getElementById('buktiBayar');
 
+    // Fungsi untuk validasi form
     const validateForm = () => {
         const selectedPaymentOption = document.querySelector('input[name="payment"]:checked');
         const isSizeRequired = selectedPaymentOption && (selectedPaymentOption.value === '2' || selectedPaymentOption.value === '4');
         const isSizeFilled = isSizeRequired ? (sizeSelect.value && sizeSelect.value !== "") : true;
         const isBuktiBayarUploaded = buktiBayarInput.files.length > 0;
 
-        // Enable submit button only if all conditions are met
-        submitButton.disabled = !(selectedPaymentOption && isSizeFilled && isBuktiBayarUploaded);
+        // Tampilkan atau sembunyikan tombol submit berdasarkan validasi
+        if (selectedPaymentOption && isSizeFilled && isBuktiBayarUploaded) {
+            submitButton.style.display = 'block'; // Tampilkan tombol
+        } else {
+            submitButton.style.display = 'none'; // Sembunyikan tombol
+        }
     };
 
-    // Add event listeners to payment options
+    // Event listener untuk opsi pembayaran
     paymentOptions.forEach(option => {
         option.addEventListener('change', () => {
             const showSize = option.value === '2' || option.value === '4';
@@ -1096,11 +1101,13 @@
         });
     });
 
-    // Add event listeners to size select and bukti bayar input
+    // Event listener untuk ukuran kaos
     sizeSelect.addEventListener('change', validateForm);
+
+    // Event listener untuk bukti bayar
     buktiBayarInput.addEventListener('change', validateForm);
 
-    // Initial validation
+    // Validasi awal saat halaman dimuat
     validateForm();
 });
     </script>
