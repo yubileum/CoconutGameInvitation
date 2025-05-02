@@ -34,6 +34,19 @@
             overflow-x: hidden;
         } */
 
+        .top-logos {
+            width: 100%;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-logos img {
+            height: 40px; /* ukuran proporsional kecil */
+            width: auto;
+        }
+
         body {
             background-color: #000;
             color: white;
@@ -516,17 +529,71 @@
         }
 
         /* Thank You Page */
+        .top-logos {
+            width: 100%;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-logos img {
+            height: 40px; /* ukuran proporsional kecil */
+            width: auto;
+        }
+
+        #finalThankYouPage {
+            width: 100%;
+            height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+            overflow: auto;
+            border-radius: 0;
+            background: url('img/background.png') no-repeat center center;
+            background-size: cover;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
         #finalThankYouPage h1 {
-            font-size: 2rem;
+            font-size: 2.4rem;
+            margin-bottom: 1rem;
+        }
+
+        #finalThankYouPage img.logo-main {
+            width: 60%;
+            max-width: 200px;
+            margin: 20px auto;
+            animation: pulse 2s infinite;
+        }
+
+        #finalThankYouPage h2 {
+            margin-top: 20px;
             margin-bottom: 20px;
         }
 
-        #finalThankYouPage img {
-            animation: pulse 2s infinite;
+        #finalThankYouPage p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #finalThankYouPage .share-instruction {
+            font-size: 0.9rem;
+            margin-top: 2rem;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+
     <div class="loading-screen" id="loadingScreen" style="display: none;">
         <div class="loading-logo">
           <img src="img/logo.gif" alt="Loading..." />
@@ -540,6 +607,11 @@
     </div>
 
     <div class="container visible" id="openingPage">
+        <div class="top-logos">
+            <img src="img/OMK-logo.png" alt="OMK Logo" />
+            <img src="img/ICU-logo.png" alt="ICU Logo" />
+        </div>
+
         <h1><b>Welcome, [Name]</b></h1>
         <p>This is your personal invitation to step into the <b>most thrilling, immersive, and high-stakes game experience</b> of the year:</p>
         <div class="logo">
@@ -556,7 +628,11 @@
     
         <div style="text-align: left; margin-top: 20px;">
             <p><b>Date:</b> Saturday, 24th May 2025</p>
-            <p><b>Time:</b> 07.30 - 15.00</p>
+            <p><b>Coconut Game:</b> 07.30 - 15.00</p>
+            <p><b>Misa OMK:</b> 17.00</p>
+            <p><b>Ivory Market:</b> 18.30</p>
+            <p><b>Unity Night:</b> 18.30</p>
+            <br>
             <p><b>Location:</b> Sekolah St. Yakobus</p>
     
             <ol style="margin-left: 20px; margin-top: 15px;">
@@ -648,6 +724,13 @@
                 <h1>CLAIM YOUR GEAR</h1>
 
                 <div class="form-group">
+                    <label>Item dibawah ini tidak wajib dibeli, silakan centang satu item yang ingin dibeli.</label>
+                    <div id="sizeChartWrapper" style="text-align: center; margin-bottom: 20px;">
+                        <img src="img/size-chart.jpeg" alt="Size Chart" style="max-width: 100%; height: auto;">
+                    </div>    
+                    <div id="sizeChartWrapper" style="text-align: center; margin-bottom: 20px;">
+                        <img src="img/kalung.jpeg" alt="Size Chart" style="max-width: 100%; height: auto;">
+                    </div>  
                     <label for="paymentOption">Pilih Paket:</label>
                     <div class="radio-group" id="paymentOptions" style="flex-direction: column; gap: 15px;">
                         <label class="radio-option">
@@ -669,10 +752,7 @@
                     </div>
                 </div>
 
-                <div class="form-group" id="sizeGroup" style="display:none;">
-                    <div id="sizeChartWrapper" style="display: none; text-align: center; margin-bottom: 20px;">
-                        <img src="img/size-chart.jpeg" alt="Size Chart" style="max-width: 100%; height: auto;">
-                    </div>                      
+                <div class="form-group" id="sizeGroup" style="display:none;">                 
                     <label for="size">Ukuran Kaos:</label>
                     <select id="size" name="size">
                         <option value="" disabled selected>Pilih ukuran</option>
@@ -694,24 +774,27 @@
         </div>
 
         <!-- Thank You Page -->
-        <div class="container" id="finalThankYouPage" style="display: none; text-align: center;">
+        <div id="finalThankYouPage" style="display: none;">
+            <div class="top-logos">
+                <img src="img/OMK-logo.png" alt="OMK Logo" />
+                <img src="img/ICU-logo.png" alt="ICU Logo" />
+            </div>
             <h1>Thank you,<br><span id="thankYouName">Player</span>.</h1>
             <p>THE COCONUT GAME will test more than just your strength—it will challenge your mind, instincts, and will to win.</p>
             <p>Are you ready? See you on May 24th.</p>
-            <img src="img/logo.png" alt="Coconut Game Logo" style="width: 60%; max-width: 240px; margin: 20px 0;">
-            <h2 style="margin-bottom: 30px;">COME PLAY WITH ME</h2>
+            <img class="logo-main" src="img/logo.png" alt="Coconut Game Logo">
+            <h2>COME PLAY WITH ME</h2>
             <div style="line-height: 2;">
-              ............................................<br>
-              ............................................<br>
-              ............................................
+                ............................................<br>
+                ............................................<br>
+                ............................................
             </div>
-            <p style="margin-top: 30px; font-size: 0.9rem;">
-              Screenshot this page and share it on your story with<br>
-              <b>#IvoryCoconutUnity #CoconutGame</b><br>
-              @omkstyakobus @omk.kimtaegon
+            <p class="share-instruction">
+                Screenshot this page and share it on your story with<br>
+                <b>#IvoryCoconutUnity #CoconutGame</b><br>
+                @omkstyakobus @omk.kimtaegon
             </p>
-        </div>
-          
+        </div>            
         
         <!-- <form id="registrationForm">
             <div class="form-group">
@@ -957,6 +1040,20 @@
             showEl.style.display = 'block';
           }
         }
+
+        document.getElementById('submitButton').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Menyembunyikan halaman sebelumnya
+            document.getElementById('paymentPage').style.display = 'none';
+
+            // Menampilkan halaman Thank You
+            document.getElementById('finalThankYouPage').style.display = 'flex';
+
+            // Optional: Mengambil nama dari input sebelumnya dan tampilkan di Thank You page
+            const playerName = document.getElementById('nama').value;
+            document.getElementById('thankYouName').textContent = playerName;
+        });
     </script>
       
       
